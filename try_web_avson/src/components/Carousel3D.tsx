@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Shield, Lock, Brain } from 'lucide-react';
 
 const Carousel3D = () => {
     const [offset, setOffset] = useState(0);
@@ -7,17 +8,74 @@ const Carousel3D = () => {
     const isDragging = useRef(false);
     const startY = useRef(0);
     const scrollTop = useRef(0);
+    const targetOffset = useRef(0);
+    const animationFrame = useRef(null);
 
     const items = [
-        { id: 1, color: 'bg-blue-500', title: 'Item 1' },
-        { id: 2, color: 'bg-purple-500', title: 'Item 2' },
-        { id: 3, color: 'bg-pink-500', title: 'Item 3' },
+        {
+            id: 1,
+            color: 'bg-blue-500/30 backdrop-blur-md',
+            title: 'GRC Estratégico',
+            subtitle: 'Gobierno, Riesgo y Cumplimiento Inteligente',
+            icon: <Shield className="text-red-500 w-8 h-8" />,
+            list: [
+                'Certificaciones estratégicas ISO 27001, ENS, NIS2, DORA',
+                'Resiliencia operativa ISO 22301 con enfoque predictivo',
+                'Auditorías inteligentes y gestión proactiva de riesgos'
+            ]
+        },
+        {
+            id: 2,
+            color: 'bg-purple-500/30 backdrop-blur-md',
+            title: 'Ciberseguridad Ejecutiva',
+            subtitle: 'CISO as a Service + Threat Intelligence',
+            icon: <Lock className="text-blue-500 w-8 h-8" />,
+            list: [
+                'CISO as a Service con experiencia C-Suite real',
+                'Threat Intelligence potenciado por IA propia',
+                'Respuesta adaptativa a amenazas emergentes'
+            ]
+        },
+        {
+            id: 3,
+            color: 'bg-pink-500/30 backdrop-blur-md',
+            title: 'Inteligencia Artificial Aplicada',
+            subtitle: 'IA Real, No Hype',
+            icon: <Brain className="text-purple-500 w-8 h-8" />,
+            list: [
+                'Agentes autónomos para procesos críticos',
+                'Plataformas adaptativas con aprendizaje continuo',
+                'Ciberinteligencia predictiva y preventiva'
+            ]
+        }
     ];
 
     const itemHeight = 300;
     const gap = 20;
     const totalHeight = (itemHeight + gap) * items.length;
     const maxOffset = totalHeight - window.innerHeight;
+
+    // Animación suave del scroll
+    useEffect(() => {
+        const animate = () => {
+            setOffset(prev => {
+                const diff = targetOffset.current - prev;
+                if (Math.abs(diff) < 0.1) {
+                    return targetOffset.current;
+                }
+                return prev + diff * 0.15; // Factor de suavizado
+            });
+            animationFrame.current = requestAnimationFrame(animate);
+        };
+
+        animationFrame.current = requestAnimationFrame(animate);
+
+        return () => {
+            if (animationFrame.current) {
+                cancelAnimationFrame(animationFrame.current);
+            }
+        };
+    }, []);
 
     // Detectar si el componente está completamente visible
     useEffect(() => {
@@ -47,16 +105,14 @@ const Carousel3D = () => {
             // Solo manejar el scroll si el componente está completamente visible
             if (!isInView) return;
 
-            const atTop = offset <= 0;
-            const atBottom = offset >= maxOffset;
+            const atTop = targetOffset.current <= 0;
+            const atBottom = targetOffset.current >= maxOffset;
 
             // Solo prevenir el comportamiento por defecto si estamos dentro del rango del carrusel
             if ((e.deltaY > 0 && !atBottom) || (e.deltaY < 0 && !atTop)) {
                 e.preventDefault();
-                setOffset(prev => {
-                    const newOffset = prev + e.deltaY * 0.5;
-                    return Math.max(0, Math.min(newOffset, maxOffset));
-                });
+                const newOffset = targetOffset.current + e.deltaY * 0.8;
+                targetOffset.current = Math.max(0, Math.min(newOffset, maxOffset));
             }
         };
 
@@ -70,12 +126,12 @@ const Carousel3D = () => {
                 container.removeEventListener('wheel', handleWheel);
             }
         };
-    }, [maxOffset, offset, isInView]);
+    }, [maxOffset, isInView]);
 
     const handleMouseDown = (e) => {
         isDragging.current = true;
         startY.current = e.pageY;
-        scrollTop.current = offset;
+        scrollTop.current = targetOffset.current;
         containerRef.current.style.cursor = 'grabbing';
     };
 
@@ -85,7 +141,7 @@ const Carousel3D = () => {
         const y = e.pageY;
         const walk = (startY.current - y) * 2;
         const newOffset = scrollTop.current + walk;
-        setOffset(Math.max(0, Math.min(newOffset, maxOffset)));
+        targetOffset.current = Math.max(0, Math.min(newOffset, maxOffset));
     };
 
     const handleMouseUp = () => {
@@ -99,7 +155,7 @@ const Carousel3D = () => {
     };
 
     return (
-        <div className="w-full h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center overflow-hidden">
+        <div className="w-full h-[100vh] bg-gray-900 flex items-center justify-center overflow-hidden">
             <div
                 ref={containerRef}
                 className="relative w-full h-full cursor-grab"
@@ -115,17 +171,26 @@ const Carousel3D = () => {
                         return (
                             <div
                                 key={item.id}
-                                className={`${item.color} rounded-2xl shadow-2xl flex items-center justify-center text-white text-3xl font-bold select-none transition-transform duration-200 hover:scale-105`}
+                                className={`bg-white/30 w-[600px] mt-15 rounded-2xl border border-3 border-white shadow-2xl flex flex-col items-start justify-start text-white p-6 select-none`}
                                 style={{
                                     position: 'absolute',
                                     top: `${y}px`,
                                     left: '50%',
                                     transform: 'translateX(-50%) translateZ(0)',
-                                    width: '500px',
-                                    height: `${itemHeight}px`
                                 }}
                             >
-                                {item.title}
+                                <div className="flex items-center mb-4">
+                                    <span className="text-4xl mr-4">{item.icon}</span>
+                                    <div>
+                                        <h2 className="text-2xl font-bold">{item.title}</h2>
+                                        <h3 className="text-lg text-white/70">{item.subtitle}</h3>
+                                    </div>
+                                </div>
+                                <ul className="list-disc pl-8 space-y-2">
+                                    {item.list.map((listItem, idx) => (
+                                        <li key={idx} className="text-white/80">{listItem}</li>
+                                    ))}
+                                </ul>
                             </div>
                         );
                     })}

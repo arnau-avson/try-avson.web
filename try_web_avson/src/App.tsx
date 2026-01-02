@@ -8,7 +8,7 @@ const App: React.FC = () => {
     const handleScroll = () => {
       const textDiv = document.getElementById("text");
       if (textDiv) {
-        const scale = 1 + window.scrollY / 600;
+        const scale = 1 + window.scrollY / 400;
         textDiv.style.transform = `scale(${scale})`;
       }
     };
@@ -43,7 +43,7 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-black h-[100vh] z-50 relative">
+      <div className="bg-black h-[100vh] z-50 relative bg-[radial-gradient(circle_at_30%_30%,rgba(249,115,22,0.25),transparent_40%),radial-gradient(circle_at_70%_70%,rgba(59,130,246,0.25),transparent_40%),radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.25),transparent_40%)]">
         <Carousel3D />
       </div>
     </>
