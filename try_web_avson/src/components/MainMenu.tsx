@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const CITIES: string[] = ["Barcelona", "Madrid"];
 
 const MainMenu: React.FC = () => {
+    const navigate = useNavigate();
     const [cityIndex, setCityIndex] = useState<number>(0);
     const [fade, setFade] = useState<boolean>(false);
 
@@ -37,7 +39,12 @@ const MainMenu: React.FC = () => {
                 <div className="flex justify-center">
                     <div className="flex gap-16 text-white/80">
                         <ol className="space-y-1">
-                            <li className="hover:text-white text-lg transition-colors cursor-pointer">GRC</li>
+                            <li 
+                                className="hover:text-white text-lg transition-colors cursor-pointer"
+                                onClick={() => navigate("/grc")}
+                            >
+                                GRC
+                            </li>
                             <li className="hover:text-white text-lg transition-colors cursor-pointer">Ciberseguridad</li>
                             <li className="hover:text-white text-lg transition-colors cursor-pointer">Estrategia IA</li>
                         </ol>
