@@ -4,7 +4,7 @@ import GRCBackground from "./GRCBackground";
 
 const GRCView: React.FC = () => {
     return (
-        <div className="relative min-h-screen bg-transparent">
+        <div className="relative min-h-screen bg-black overflow-hidden">
             {/* Background */}
             <GRCBackground />
 

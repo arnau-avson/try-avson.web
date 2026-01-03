@@ -18,61 +18,34 @@ const GRCBackground: React.FC = () => {
             0.1,
             100
         );
-        camera.position.z = 2;
+        camera.position.z = 3;
 
         /* RENDERER */
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        const renderer = new THREE.WebGLRenderer({
+            alpha: true,
+            antialias: true,
+        });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(renderer.domElement);
 
-        /* PLANE */
-        const geometry = new THREE.PlaneGeometry(4, 4);
-
-        const material = new THREE.ShaderMaterial({
-            uniforms: {
-                uTime: { value: 0 },
-            },
-            vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-            fragmentShader: `
-        varying vec2 vUv;
-        uniform float uTime;
-
-        // Ruido barato
-        float noise(vec2 p) {
-          return sin(p.x) * sin(p.y);
-        }
-
-        void main() {
-          vec2 uv = vUv;
-
-          // Distorsión suave en X e Y
-          float t = uTime * 0.15;
-          uv.x += sin(uv.y * 4.0 + t) * 0.04;
-          uv.y += cos(uv.x * 3.0 + t) * 0.03;
-
-          // Ruido muy sutil
-          float n = noise(uv * 8.0 + t) * 0.02;
-
-          vec3 colorTop = vec3(0.07, 0.10, 0.18);   // slate-800
-          vec3 colorBottom = vec3(0.02, 0.04, 0.08); // slate-950
-
-          float mixValue = clamp(uv.y + n, 0.0, 1.0);
-          vec3 color = mix(colorBottom, colorTop, mixValue);
-
-          gl_FragColor = vec4(color, 1.0);
-        }
-      `,
+        /* ICOSAHEDRON */
+        const geometry = new THREE.IcosahedronGeometry(1, 3);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x0f172a,
+            flatShading: true,
+            roughness: 0.9,
+            metalness: 0.1,
         });
 
-        const plane = new THREE.Mesh(geometry, material);
-        scene.add(plane);
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+
+        /* LIGHTS */
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const directional = new THREE.DirectionalLight(0xffffff, 0.6);
+        directional.position.set(5, 5, 5);
+        scene.add(directional);
 
         /* RESIZE */
         const onResize = () => {
@@ -83,8 +56,32 @@ const GRCBackground: React.FC = () => {
         window.addEventListener("resize", onResize);
 
         /* ANIMATION */
+        const clock = new THREE.Clock();
+
         const animate = () => {
-            material.uniforms.uTime.value += 0.01;
+            const time = clock.getElapsedTime();
+
+            mesh.rotation.y += 0.002;
+            mesh.rotation.x += 0.001;
+
+            const position = geometry.attributes.position;
+            for (let i = 0; i < position.count; i++) {
+                const x = position.getX(i);
+                const y = position.getY(i);
+                const z = position.getZ(i);
+
+                const noise =
+                    Math.sin(time + x * 2.0 + y * 2.0 + z * 2.0) * 0.002;
+
+                position.setXYZ(
+                    i,
+                    x + x * noise,
+                    y + y * noise,
+                    z + z * noise
+                );
+            }
+            position.needsUpdate = true;
+
             renderer.render(scene, camera);
             requestAnimationFrame(animate);
         };
@@ -108,3 +105,4 @@ const GRCBackground: React.FC = () => {
 };
 
 export default GRCBackground;
+
