@@ -1,11 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import MainMenu from "./components/MainMenu";
 import Carousel3D from "./components/Carousel3D";
 import GlobeBackground from "./components/GlobeBackground";
-import ContactForm from "./components/ContactForm";
 import Footer from "./components/Footer";
 
 const App: React.FC = () => {
+  const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
+
   useEffect(() => {
     const handleScroll = () => {
       const textDiv = document.getElementById("text");
@@ -15,48 +16,101 @@ const App: React.FC = () => {
       }
     };
 
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      setMousePosition({ x, y });
+    };
+
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
   }, []);
 
   return (
     <>
-      {/* Fondo global */}
-      <GlobeBackground />
+      {/* Fondo global - z-index 0 */}
+      <GlobeBackground mousePosition={mousePosition} />
 
-      {/* Menú */}
+      {/* Menú - z-index alto */}
       <MainMenu />
 
       {/* HERO */}
       <div className="h-[68vh] flex md:mt-25 justify-center relative z-10">
         <div
           id="text"
-          className="text-center fixed font-inter text-slate-100 tracking-wide z-0 pointer-events-none"
+          className="text-center fixed font-mono text-slate-100 tracking-wider z-0 pointer-events-none"
         >
-          <h1 className="text-4xl md:text-7xl font-semibold leading-tight">
-            GRC Governance
-          </h1>
-          <h1 className="text-4xl md:text-7xl font-semibold leading-tight">
+          <h1 className="text-4xl md:text-7xl font-bold uppercase">GRC Governance</h1>
+          <h1 className="text-4xl md:text-7xl font-bold uppercase">
             Artificial Intelligence
           </h1>
-          <h1 className="text-4xl md:text-7xl font-semibold leading-tight">
-            Cybersecurity
-          </h1>
+          <h1 className="text-4xl md:text-7xl font-bold uppercase">Cybersecurity</h1>
         </div>
       </div>
 
-      {/* CARRUSEL STICKY */}
       <div className="sticky top-0 h-screen z-30">
-        <div className="bg-black h-full bg-[radial-gradient(circle_at_30%_30%,rgba(249,115,22,0.25),transparent_40%),radial-gradient(circle_at_70%_70%,rgba(59,130,246,0.25),transparent_40%),radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.25),transparent_40%)]">
+        <div className="relative h-full overflow-hidden bg-slate-950">
+
+          {/* Gradiente base profundo */}
+          <div className="absolute inset-0 bg-gradient-to-br 
+      from-slate-900 
+      via-slate-950 
+      to-slate-900" />
+
+          {/* Banda de luz diagonal (muy sutil) */}
+          <div className="absolute -inset-[40%] 
+      bg-gradient-to-tr 
+      from-transparent 
+      via-cyan-500/10 
+      to-transparent 
+      rotate-12" />
+
+          {/* Halo radial superior izquierdo */}
+          <div className="absolute top-[-20%] left-[-20%] 
+      w-[120%] h-[120%] 
+      bg-radial-gradient 
+      from-cyan-500/12 
+      via-transparent 
+      to-transparent" />
+
+          {/* Profundidad inferior */}
+          <div className="absolute bottom-[-30%] right-[-30%] 
+      w-[120%] h-[120%] 
+      bg-radial-gradient 
+      from-amber-500/10 
+      via-transparent 
+      to-transparent" />
+
+          {/* Viñeta para enfoque central */}
+          <div className="absolute inset-0 
+      bg-radial-gradient 
+      from-transparent 
+      via-slate-950/40 
+      to-slate-950/90" />
+
+          {/* Ruido ultra sutil */}
+          <div
+            className="absolute inset-0 opacity-[0.015]"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            }}
+          />
+
           <Carousel3D />
         </div>
       </div>
 
-      {/* SCROLL BUFFER */}
-      <div className="h-[200vh] relative z-20" />
 
-      {/* FOOTER - Mayor z-index para superponerse */}
-      <div className="relative z-50">
+      {/* SCROLL BUFFER */}
+      <div className="h-[200vh]" />
+
+      {/* FOOTER - Con fondo y z-index alto */}
+      <div className="relative z-50 bg-black">
         <Footer />
       </div>
     </>

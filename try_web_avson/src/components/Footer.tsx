@@ -2,24 +2,39 @@ import { FC } from "react";
 import { Mail, MapPin } from "lucide-react";
 
 const Footer: FC = () => {
-    const marqueeText = "GRC • Ciberseguridad • Inteligencia Artificial • Resiliencia Operativa • Transformación Digital • ";
+    const images = [
+        "veolia.png",
+        "agbar.png",
+        "albacete.png",
+        "aquatec.webp",
+        "aviles.jpg",
+        "digi.png",
+        "emasagra.png",
+        "hardrock.png",
+        "incide.png",
+        "logo_logistium.png",
+        "mbo.png",
+        "tobeit.png",
+        "zertiban.jpg",
+    ];
 
     return (
         <footer className="relative bg-black text-white overflow-hidden">
-            {/* MARQUEE */}
-            <div className="relative w-full overflow-hidden border-b border-gray-300 py-4 bg-black">
+            <div className="relative w-full overflow-hidden border-b border-gray-300 py-8 bg-black">
                 <div className="flex animate-marquee whitespace-nowrap">
-                    <span className="text-2xl font-bold text-white/80 mx-8">{marqueeText}</span>
-                    <span className="text-2xl font-bold text-white/80 mx-8">{marqueeText}</span>
-                    <span className="text-2xl font-bold text-white/80 mx-8">{marqueeText}</span>
-                    <span className="text-2xl font-bold text-white/80 mx-8">{marqueeText}</span>
+                    {images.map((image, index) => (
+                        <img
+                            key={index}
+                            src={`/public/${image}`}
+                            alt={image.split(".")[0]}
+                            className="h-12 mx-8 object-contain filter grayscale hover:filter-none transition"
+                        />
+                    ))}
                 </div>
             </div>
 
             <div className="relative z-10 max-w-7xl mx-auto px-6 py-16">
-                {/* GRID */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-                    {/* BRAND */}
                     <div className="space-y-4">
                         <h2 className="text-3xl font-semibold tracking-tight">avson</h2>
                         <p className="text-base text-white/70 max-w-xs">
@@ -28,7 +43,6 @@ const Footer: FC = () => {
                         </p>
                     </div>
 
-                    {/* SERVICIOS */}
                     <div>
                         <h3 className="text-base font-semibold mb-4">Servicios</h3>
                         <ul className="space-y-3 text-base text-white/70">
@@ -39,7 +53,6 @@ const Footer: FC = () => {
                         </ul>
                     </div>
 
-                    {/* EMPRESA */}
                     <div>
                         <h3 className="text-base font-semibold mb-4">Empresa</h3>
                         <ul className="space-y-3 text-base text-white/70">
@@ -52,7 +65,6 @@ const Footer: FC = () => {
                         </ul>
                     </div>
 
-                    {/* CONTACTO */}
                     <div>
                         <h3 className="text-base font-semibold mb-4">Contacto</h3>
                         <ul className="space-y-4 text-base text-white/70">
@@ -68,10 +80,8 @@ const Footer: FC = () => {
                     </div>
                 </div>
 
-                {/* DIVIDER */}
                 <div className="my-10 border-t border-white/10" />
 
-                {/* FOOTER BOTTOM */}
                 <div className="flex flex-col md:flex-row justify-between items-center text-sm text-white/50 gap-4">
                     <span>© 2026 Avson. Todos los derechos reservados.</span>
                     <div className="flex gap-4">
@@ -88,7 +98,7 @@ const Footer: FC = () => {
                 </div>
             </div>
 
-            <style jsx>{`
+            <style>{`
                 @keyframes marquee {
                     0% {
                         transform: translateX(0);
