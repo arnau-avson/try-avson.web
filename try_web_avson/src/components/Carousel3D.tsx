@@ -2,14 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { Shield, Lock, Brain } from 'lucide-react';
 
 const Carousel3D = () => {
-    const [offset, setOffset] = useState(0);
-    const [isInView, setIsInView] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
     const containerRef = useRef(null);
-    const isDragging = useRef(false);
-    const startY = useRef(0);
-    const scrollTop = useRef(0);
-    const targetOffset = useRef(0);
-    const animationFrame = useRef(null);
+    const scrollTimeout = useRef(null);
+    const [allowPageScroll, setAllowPageScroll] = useState(false);
 
     const items = [
         {
@@ -50,152 +46,183 @@ const Carousel3D = () => {
         }
     ];
 
-    const itemHeight = 300;
-    const gap = 20;
-    const totalHeight = (itemHeight + gap) * items.length;
-    const maxOffset = totalHeight - window.innerHeight;
-
-    // Animación suave del scroll
-    useEffect(() => {
-        const animate = () => {
-            setOffset(prev => {
-                const diff = targetOffset.current - prev;
-                if (Math.abs(diff) < 0.1) {
-                    return targetOffset.current;
-                }
-                return prev + diff * 0.15; // Factor de suavizado
-            });
-            animationFrame.current = requestAnimationFrame(animate);
-        };
-
-        animationFrame.current = requestAnimationFrame(animate);
-
-        return () => {
-            if (animationFrame.current) {
-                cancelAnimationFrame(animationFrame.current);
-            }
-        };
-    }, []);
-
-    // Detectar si el componente está completamente visible
-    useEffect(() => {
-        const checkIfInView = () => {
-            if (!containerRef.current) return;
-
-            const rect = containerRef.current.getBoundingClientRect();
-            const windowHeight = window.innerHeight;
-
-            // El componente está completamente visible cuando su top está en 0 o cerca
-            const fullyVisible = rect.top <= 0 && rect.bottom >= windowHeight;
-            setIsInView(fullyVisible);
-        };
-
-        window.addEventListener('scroll', checkIfInView);
-        window.addEventListener('resize', checkIfInView);
-        checkIfInView();
-
-        return () => {
-            window.removeEventListener('scroll', checkIfInView);
-            window.removeEventListener('resize', checkIfInView);
-        };
-    }, []);
-
+    // Manejar scroll con lógica mejorada para permitir continuar después de la última tarjeta
     useEffect(() => {
         const handleWheel = (e) => {
-            // Solo manejar el scroll si el componente está completamente visible
+            const container = containerRef.current;
+            if (!container) return;
+
+            const rect = container.getBoundingClientRect();
+            const isInView = rect.top <= 100 && rect.bottom >= window.innerHeight - 100;
+
             if (!isInView) return;
 
-            const atTop = targetOffset.current <= 0;
-            const atBottom = targetOffset.current >= maxOffset;
+            const atFirst = currentIndex === 0;
+            const atLast = currentIndex === items.length - 1;
+            const scrollingUp = e.deltaY < 0;
+            const scrollingDown = e.deltaY > 0;
 
-            // Solo prevenir el comportamiento por defecto si estamos dentro del rango del carrusel
-            if ((e.deltaY > 0 && !atBottom) || (e.deltaY < 0 && !atTop)) {
+            // Si estamos en la última tarjeta y scrolleamos hacia abajo, permitir scroll de página
+            if (atLast && scrollingDown && allowPageScroll) {
+                return; // Dejar que el scroll pase naturalmente
+            }
+
+            // Si estamos en la última tarjeta y scrolleamos hacia abajo por primera vez
+            if (atLast && scrollingDown && !allowPageScroll) {
                 e.preventDefault();
-                const newOffset = targetOffset.current + e.deltaY * 0.8;
-                targetOffset.current = Math.max(0, Math.min(newOffset, maxOffset));
+                setAllowPageScroll(true);
+                return;
+            }
+
+            // Si scrolleamos hacia arriba desde "permitir scroll", volver al carrusel
+            if (atLast && scrollingUp && allowPageScroll) {
+                e.preventDefault();
+                setAllowPageScroll(false);
+                return;
+            }
+
+            // Lógica normal del carrusel
+            if ((scrollingDown && !atLast) || (scrollingUp && !atFirst)) {
+                e.preventDefault();
+
+                if (scrollTimeout.current) {
+                    clearTimeout(scrollTimeout.current);
+                }
+
+                scrollTimeout.current = setTimeout(() => {
+                    if (scrollingDown && currentIndex < items.length - 1) {
+                        setCurrentIndex(prev => prev + 1);
+                    } else if (scrollingUp && currentIndex > 0) {
+                        setCurrentIndex(prev => prev - 1);
+                        setAllowPageScroll(false);
+                    }
+                }, 50);
             }
         };
 
-        const container = containerRef.current;
-        if (container) {
-            container.addEventListener('wheel', handleWheel, { passive: false });
-        }
+        window.addEventListener('wheel', handleWheel, { passive: false });
 
         return () => {
-            if (container) {
-                container.removeEventListener('wheel', handleWheel);
+            window.removeEventListener('wheel', handleWheel);
+            if (scrollTimeout.current) {
+                clearTimeout(scrollTimeout.current);
             }
         };
-    }, [maxOffset, isInView]);
+    }, [currentIndex, items.length, allowPageScroll]);
 
-    const handleMouseDown = (e) => {
-        isDragging.current = true;
-        startY.current = e.pageY;
-        scrollTop.current = targetOffset.current;
-        containerRef.current.style.cursor = 'grabbing';
-    };
+    // Resetear allowPageScroll cuando cambiamos de tarjeta
+    useEffect(() => {
+        if (currentIndex !== items.length - 1) {
+            setAllowPageScroll(false);
+        }
+    }, [currentIndex, items.length]);
 
-    const handleMouseMove = (e) => {
-        if (!isDragging.current) return;
-        e.preventDefault();
-        const y = e.pageY;
-        const walk = (startY.current - y) * 2;
-        const newOffset = scrollTop.current + walk;
-        targetOffset.current = Math.max(0, Math.min(newOffset, maxOffset));
-    };
+    // Manejar teclado
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowDown' && currentIndex < items.length - 1) {
+                setCurrentIndex(prev => prev + 1);
+            } else if (e.key === 'ArrowUp' && currentIndex > 0) {
+                setCurrentIndex(prev => prev - 1);
+            }
+        };
 
-    const handleMouseUp = () => {
-        isDragging.current = false;
-        containerRef.current.style.cursor = 'grab';
-    };
-
-    const handleMouseLeave = () => {
-        isDragging.current = false;
-        containerRef.current.style.cursor = 'grab';
-    };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentIndex, items.length]);
 
     return (
-        <div className="w-full h-[100vh] bg-gray-900 flex items-center justify-center overflow-hidden">
+        <div className="w-full h-[100vh] flex flex-col items-center justify-center overflow-hidden relative">
+            {/* Título */}
+            <div className="absolute top-16 left-1/2 transform -translate-x-1/2 text-center z-30">
+                <h1 className="text-5xl font-bold text-white mb-2">
+                    Soluciones estratégicas
+                </h1>
+                <h1 className="text-5xl font-bold text-white">
+                    para la era digital
+                </h1>
+            </div>
+
             <div
                 ref={containerRef}
-                className="relative w-full h-full cursor-grab"
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseLeave}
+                className="relative w-full h-full flex items-center justify-center"
             >
-                <div className="absolute inset-0">
-                    {items.map((item, index) => {
-                        const y = index * (itemHeight + gap) - offset;
+                {items.map((item, index) => {
+                    const isActive = index === currentIndex;
+                    const isPrev = index < currentIndex;
+                    const isNext = index > currentIndex;
 
-                        return (
-                            <div
-                                key={item.id}
-                                className={`bg-white/30 w-[600px] mt-15 rounded-2xl border border-3 border-white shadow-2xl flex flex-col items-start justify-start text-white p-6 select-none`}
-                                style={{
-                                    position: 'absolute',
-                                    top: `${y}px`,
-                                    left: '50%',
-                                    transform: 'translateX(-50%) translateZ(0)',
-                                }}
-                            >
-                                <div className="flex items-center mb-4">
-                                    <span className="text-4xl mr-4">{item.icon}</span>
-                                    <div>
-                                        <h2 className="text-2xl font-bold">{item.title}</h2>
-                                        <h3 className="text-lg text-white/70">{item.subtitle}</h3>
-                                    </div>
+                    let transform = 'translateX(-50%) translateY(0)';
+                    let opacity = 0;
+                    let scale = 0.8;
+                    let zIndex = 0;
+
+                    if (isActive) {
+                        transform = 'translateX(-50%) translateY(0)';
+                        opacity = 1;
+                        scale = 1;
+                        zIndex = 10;
+                    } else if (isPrev) {
+                        transform = 'translateX(-50%) translateY(-120%)';
+                        opacity = 0;
+                        scale = 0;
+                        zIndex = 5;
+                    } else if (isNext) {
+                        transform = 'translateX(-50%) translateY(120%)';
+                        opacity = 0.3;
+                        scale = 0.85;
+                        zIndex = 5;
+                    }
+
+                    return (
+                        <div
+                            key={item.id}
+                            className="bg-white/30 w-[600px] rounded-2xl border-2 border-white shadow-2xl flex flex-col items-start justify-start text-white p-6 absolute"
+                            style={{
+                                opacity,
+                                transform: `${transform} scale(${scale})`,
+                                transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                                left: '50%',
+                                zIndex,
+                                pointerEvents: isActive ? 'auto' : 'none',
+                            }}
+                        >
+                            <div className="flex items-center mb-4">
+                                <span className="text-4xl mr-4">{item.icon}</span>
+                                <div>
+                                    <h2 className="text-2xl font-bold">{item.title}</h2>
+                                    <h3 className="text-lg text-white/70">{item.subtitle}</h3>
                                 </div>
-                                <ul className="list-disc pl-8 space-y-2">
-                                    {item.list.map((listItem, idx) => (
-                                        <li key={idx} className="text-white/80">{listItem}</li>
-                                    ))}
-                                </ul>
                             </div>
-                        );
-                    })}
-                </div>
+                            <ul className="list-disc pl-8 space-y-2">
+                                {item.list.map((listItem, idx) => (
+                                    <li key={idx} className="text-white/80">{listItem}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    );
+                })}
             </div>
+
+            {/* Indicador visual de que hay más contenido abajo */}
+            {currentIndex === items.length - 1 && (
+                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30">
+                    <div className="flex flex-col items-center animate-bounce">
+                        <p className="text-white/60 text-sm mb-2">Continúa hacia abajo</p>
+                        <svg
+                            className="w-6 h-6 text-white/60"
+                            fill="none"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                        </svg>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
