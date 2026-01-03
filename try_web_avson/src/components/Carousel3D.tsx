@@ -10,10 +10,10 @@ const Carousel3D = () => {
     const items = [
         {
             id: 1,
-            color: 'bg-blue-500/30 backdrop-blur-md',
+            color: 'bg-gradient-to-br from-slate-800/90 to-slate-900/95',
             title: 'GRC Estratégico',
             subtitle: 'Gobierno, Riesgo y Cumplimiento Inteligente',
-            icon: <Shield className="text-red-500 w-8 h-8" />,
+            icon: <Shield className="text-blue-500 w-12 h-12" />,
             list: [
                 'Certificaciones estratégicas ISO 27001, ENS, NIS2, DORA',
                 'Resiliencia operativa ISO 22301 con enfoque predictivo',
@@ -22,10 +22,10 @@ const Carousel3D = () => {
         },
         {
             id: 2,
-            color: 'bg-purple-500/30 backdrop-blur-md',
+            color: 'bg-gradient-to-br from-slate-800/90 to-slate-900/95',
             title: 'Ciberseguridad Ejecutiva',
             subtitle: 'CISO as a Service + Threat Intelligence',
-            icon: <Lock className="text-blue-500 w-8 h-8" />,
+            icon: <Lock className="text-emerald-500 w-12 h-12" />,
             list: [
                 'CISO as a Service con experiencia C-Suite real',
                 'Threat Intelligence potenciado por IA propia',
@@ -34,10 +34,10 @@ const Carousel3D = () => {
         },
         {
             id: 3,
-            color: 'bg-pink-500/30 backdrop-blur-md',
+            color: 'bg-gradient-to-br from-slate-800/90 to-slate-900/95',
             title: 'Inteligencia Artificial Aplicada',
             subtitle: 'IA Real, No Hype',
-            icon: <Brain className="text-purple-500 w-8 h-8" />,
+            icon: <Brain className="text-indigo-500 w-12 h-12" />,
             list: [
                 'Agentes autónomos para procesos críticos',
                 'Plataformas adaptativas con aprendizaje continuo',
@@ -46,7 +46,6 @@ const Carousel3D = () => {
         }
     ];
 
-    // Manejar scroll con lógica mejorada para permitir continuar después de la última tarjeta
     useEffect(() => {
         const handleWheel = (e) => {
             const container = containerRef.current;
@@ -62,26 +61,22 @@ const Carousel3D = () => {
             const scrollingUp = e.deltaY < 0;
             const scrollingDown = e.deltaY > 0;
 
-            // Si estamos en la última tarjeta y scrolleamos hacia abajo, permitir scroll de página
             if (atLast && scrollingDown && allowPageScroll) {
-                return; // Dejar que el scroll pase naturalmente
+                return;
             }
 
-            // Si estamos en la última tarjeta y scrolleamos hacia abajo por primera vez
             if (atLast && scrollingDown && !allowPageScroll) {
                 e.preventDefault();
                 setAllowPageScroll(true);
                 return;
             }
 
-            // Si scrolleamos hacia arriba desde "permitir scroll", volver al carrusel
             if (atLast && scrollingUp && allowPageScroll) {
                 e.preventDefault();
                 setAllowPageScroll(false);
                 return;
             }
 
-            // Lógica normal del carrusel
             if ((scrollingDown && !atLast) || (scrollingUp && !atFirst)) {
                 e.preventDefault();
 
@@ -110,14 +105,12 @@ const Carousel3D = () => {
         };
     }, [currentIndex, items.length, allowPageScroll]);
 
-    // Resetear allowPageScroll cuando cambiamos de tarjeta
     useEffect(() => {
         if (currentIndex !== items.length - 1) {
             setAllowPageScroll(false);
         }
     }, [currentIndex, items.length]);
 
-    // Manejar teclado
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'ArrowDown' && currentIndex < items.length - 1) {
@@ -132,17 +125,7 @@ const Carousel3D = () => {
     }, [currentIndex, items.length]);
 
     return (
-        <div className="w-full h-[100vh] flex flex-col items-center justify-center overflow-hidden relative">
-            {/* Título */}
-            <div className="absolute top-16 left-1/2 transform -translate-x-1/2 text-center z-30">
-                <h1 className="text-5xl font-bold text-white mb-2">
-                    Soluciones estratégicas
-                </h1>
-                <h1 className="text-5xl font-bold text-white">
-                    para la era digital
-                </h1>
-            </div>
-
+        <div className="w-full h-[100vh] flex flex-col items-center justify-center overflow-hidden relative bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
             <div
                 ref={containerRef}
                 className="relative w-full h-full flex items-center justify-center"
@@ -177,7 +160,7 @@ const Carousel3D = () => {
                     return (
                         <div
                             key={item.id}
-                            className="bg-white/30 w-[600px] rounded-2xl border-2 border-white shadow-2xl flex flex-col items-start justify-start text-white p-6 absolute"
+                            className={`${item.color} backdrop-blur-xl w-[750px] rounded-xl border border-slate-700/50 shadow-2xl flex flex-col items-start justify-start text-white p-5 absolute`}
                             style={{
                                 opacity,
                                 transform: `${transform} scale(${scale})`,
@@ -185,32 +168,39 @@ const Carousel3D = () => {
                                 left: '50%',
                                 zIndex,
                                 pointerEvents: isActive ? 'auto' : 'none',
+                                boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(255, 255, 255, 0.02)',
                             }}
                         >
-                            <div className="flex items-center mb-4">
-                                <span className="text-4xl mr-4">{item.icon}</span>
+                            <div className="flex items-center mb-10">
+                                <div className="bg-slate-700/30 p-5 rounded-lg mr-6 backdrop-blur-sm border border-slate-600/30">
+                                    {item.icon}
+                                </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold">{item.title}</h2>
-                                    <h3 className="text-lg text-white/70">{item.subtitle}</h3>
+                                    <h2 className="text-4xl font-semibold mb-2 tracking-tight text-slate-100">{item.title}</h2>
+                                    <h3 className="text-xl text-slate-300 font-normal">{item.subtitle}</h3>
                                 </div>
                             </div>
-                            <ul className="list-disc pl-8 space-y-2">
-                                {item.list.map((listItem, idx) => (
-                                    <li key={idx} className="text-white/80">{listItem}</li>
-                                ))}
-                            </ul>
+                            <div className="bg-slate-800/40 backdrop-blur-sm rounded-lg p-8 w-full border border-slate-700/40">
+                                <ul className="space-y-5">
+                                    {item.list.map((listItem, idx) => (
+                                        <li key={idx} className="flex items-start">
+                                            <span className="text-slate-500 mr-4 mt-1 text-xl">•</span>
+                                            <span className="text-slate-200 text-lg leading-relaxed">{listItem}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
                         </div>
                     );
                 })}
             </div>
 
-            {/* Indicador visual de que hay más contenido abajo */}
             {currentIndex === items.length - 1 && (
-                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-30">
+                <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-30">
                     <div className="flex flex-col items-center animate-bounce">
-                        <p className="text-white/60 text-sm mb-2">Continúa hacia abajo</p>
+                        <p className="text-slate-400 text-base mb-3 font-medium">Continúa hacia abajo</p>
                         <svg
-                            className="w-6 h-6 text-white/60"
+                            className="w-7 h-7 text-slate-400"
                             fill="none"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -223,6 +213,19 @@ const Carousel3D = () => {
                     </div>
                 </div>
             )}
+
+            <div className="absolute bottom-10 right-10 z-30 flex gap-3">
+                {items.map((_, idx) => (
+                    <button
+                        key={idx}
+                        onClick={() => setCurrentIndex(idx)}
+                        className={`w-3 h-3 rounded-full transition-all duration-300 ${idx === currentIndex
+                            ? 'bg-slate-300 w-8'
+                            : 'bg-slate-600 hover:bg-slate-500'
+                            }`}
+                    />
+                ))}
+            </div>
         </div>
     );
 };
