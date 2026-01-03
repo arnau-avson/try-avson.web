@@ -7,7 +7,7 @@ const Footer: FC = () => {
     return (
         <footer className="relative bg-black text-white overflow-hidden">
             {/* MARQUEE */}
-            <div className="relative w-full overflow-hidden border-b border-white/10 py-4 bg-gradient-to-r from-orange-500/10 via-blue-500/10 to-green-500/10">
+            <div className="relative w-full overflow-hidden border-b border-gray-300 py-4 bg-black">
                 <div className="flex animate-marquee whitespace-nowrap">
                     <span className="text-2xl font-bold text-white/80 mx-8">{marqueeText}</span>
                     <span className="text-2xl font-bold text-white/80 mx-8">{marqueeText}</span>
