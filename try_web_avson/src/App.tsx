@@ -3,9 +3,19 @@ import MainMenu from "./components/MainMenu";
 import Carousel3D from "./components/Carousel3D";
 import GlobeBackground from "./components/GlobeBackground";
 import Footer from "./components/Footer";
+import FullScreenLoader from "./components/FullScreenLoader";
 
 const App: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,6 +40,10 @@ const App: React.FC = () => {
       window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
+
+  if (isLoading) {
+    return <FullScreenLoader />;
+  }
 
   return (
     <>

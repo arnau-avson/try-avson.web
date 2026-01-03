@@ -55,38 +55,41 @@ const GlobeBackground: React.FC<GlobeBackgroundProps> = ({ mousePosition }) => {
         const borderGroup = new THREE.Group();
         scene.add(borderGroup);
 
-        fetch("/border-world.json")
-            .then((r) => r.json())
-            .then((data) => {
-                const borderMaterial = new THREE.LineBasicMaterial({
-                    color: 0x0074ff,
-                });
+        const preloadBorders = async () => {
+            const response = await fetch("/border-world.json");
+            const data = await response.json();
 
-                const convertCoords = (coords: number[][]) =>
-                    coords.map(([lon, lat]) => {
-                        const phi = (90 - lat) * (Math.PI / 180);
-                        const theta = (lon + 180) * (Math.PI / 180);
-                        return new THREE.Vector3(
-                            Math.sin(phi) * Math.cos(theta),
-                            Math.cos(phi),
-                            Math.sin(phi) * Math.sin(theta)
-                        );
-                    });
-
-                data.geometries.forEach((g: any) => {
-                    const drawRing = (ring: number[][]) => {
-                        const geo = new THREE.BufferGeometry().setFromPoints(
-                            convertCoords(ring)
-                        );
-                        borderGroup.add(new THREE.Line(geo, borderMaterial));
-                    };
-
-                    if (g.type === "LineString") drawRing(g.coordinates);
-                    if (g.type === "Polygon") g.coordinates.forEach(drawRing);
-                    if (g.type === "MultiPolygon")
-                        g.coordinates.forEach((p: any) => p.forEach(drawRing));
-                });
+            const borderMaterial = new THREE.LineBasicMaterial({
+                color: 0x0074ff,
             });
+
+            const convertCoords = (coords: number[][]) =>
+                coords.map(([lon, lat]) => {
+                    const phi = (90 - lat) * (Math.PI / 180);
+                    const theta = (lon + 180) * (Math.PI / 180);
+                    return new THREE.Vector3(
+                        Math.sin(phi) * Math.cos(theta),
+                        Math.cos(phi),
+                        Math.sin(phi) * Math.sin(theta)
+                    );
+                });
+
+            data.geometries.forEach((g: any) => {
+                const drawRing = (ring: number[][]) => {
+                    const geo = new THREE.BufferGeometry().setFromPoints(
+                        convertCoords(ring)
+                    );
+                    borderGroup.add(new THREE.Line(geo, borderMaterial));
+                };
+
+                if (g.type === "LineString") drawRing(g.coordinates);
+                if (g.type === "Polygon") g.coordinates.forEach(drawRing);
+                if (g.type === "MultiPolygon")
+                    g.coordinates.forEach((p: any) => p.forEach(drawRing));
+            });
+        };
+
+        preloadBorders();
 
         /* ---------- LIGHTS ---------- */
         scene.add(new THREE.AmbientLight(0xffffff, 0.6));
